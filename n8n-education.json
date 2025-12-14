@@ -1,0 +1,664 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        16
+      ],
+      "id": "3c4a0de9-3008-4f2d-b6a1-eca2279f39fb",
+      "name": "Telegram Trigger",
+      "webhookId": "2c6fc187-c1b0-4b77-b0eb-8f2c59f34557",
+      "credentials": {
+        "telegramApi": {
+          "id": "OXeyEoikgIxX6tce",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.document.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1872,
+        -112
+      ],
+      "id": "37f77d33-7d68-4037-af13-09f5c4930edd",
+      "name": "Get a file",
+      "webhookId": "216e85a3-810c-4f9a-9f42-829a256afe80",
+      "credentials": {
+        "telegramApi": {
+          "id": "OXeyEoikgIxX6tce",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "942cfd0c-3dbf-4b52-924e-06e595813f9d",
+              "leftValue": "={{$json.message.document}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1424,
+        16
+      ],
+      "id": "4ed9af73-e580-4bb2-bd8d-b5dc8d261bff",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Пожалуйста, отправьте документ 📄  Поддерживаемые форматы: • PDF • DOCX • TXT • MD",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1872,
+        112
+      ],
+      "id": "f14f5ae1-9347-432a-9d2f-004d16dc98bd",
+      "name": "Send a text message",
+      "webhookId": "b7aac8a6-747f-4b12-bc42-69686ba2667e",
+      "credentials": {
+        "telegramApi": {
+          "id": "OXeyEoikgIxX6tce",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5c5ba205-4204-4d66-a6a3-e0c1f59d4c54",
+              "leftValue": "={{ $json.message.document.mime_type }}",
+              "rightValue": "application/pdf",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "a8b45537-beb1-4c62-860b-92953d827863",
+              "leftValue": "={{ $json.message.document.mime_type }}",
+              "rightValue": "word",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "cc20df92-337b-46bf-9581-096bad7b8623",
+              "leftValue": "={{ $json.message.document.mime_type }}",
+              "rightValue": "text",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1648,
+        -64
+      ],
+      "id": "b22e0ba9-2849-4df1-890d-d165ee7c2d7d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Authorization\": \"Bearer gsk_xxx\",\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama-3.1-8b-instant"
+            },
+            {
+              "name": "messages",
+              "value": "={{[   {     \"role\": \"system\",     \"content\": \"You are a JSON API. You must return ONLY valid JSON. Do not include explanations, markdown, headings, or any text outside JSON. If you break the format, the response is invalid.\"   },   {     \"role\": \"user\",     \"content\": `Here is a document text: ${$json.data}. Tasks: 1. Write a concise summary in russian language (3–7 sentences). 2. Extract 5–10 keywords. Return the result STRICTLY in JSON, without explanations and text around.\nResponse format: { \"summary\": \"...\", \"keywords\": [\"...\"] }`   } ]}}"
+            },
+            {
+              "name": "temperature",
+              "value": "={{0.7}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2976,
+        -112
+      ],
+      "id": "111cade2-a02e-4f7d-9019-bc57be8bd7ae",
+      "name": "Grock http"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n\n  \"summary\": \"{{ JSON.parse($json.choices[0].message.content).summary }}\",\n  \"keywords\": \"{{ JSON.parse($json.choices[0].message.content).keywords.join(', ') }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3184,
+        -112
+      ],
+      "id": "62a1fa8f-b8bb-4cfd-8214-9adbd72f85ee",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "16ovhu6YxG7HNA5S4wDOuQ5yUwho5UUUteaNrjQgJR-I",
+          "mode": "list",
+          "cachedResultName": "вк задание",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ovhu6YxG7HNA5S4wDOuQ5yUwho5UUUteaNrjQgJR-I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ovhu6YxG7HNA5S4wDOuQ5yUwho5UUUteaNrjQgJR-I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now }}",
+            "uploader": "={{ $('Telegram Trigger').item.json.message.from.username }}",
+            "file_name": "={{ $('Telegram Trigger').item.json.message.document.file_name }}",
+            "summary": "={{ $json.summary }}",
+            "keywords": "={{ $json.keywords }}"
+          },
+          "matchingColumns": [
+            "timestamp"
+          ],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "uploader",
+              "displayName": "uploader",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "file_name",
+              "displayName": "file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "keywords",
+              "displayName": "keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3392,
+        -112
+      ],
+      "id": "327940b7-1b07-4d63-aabd-3c39dd2cb436",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w3S9iGhWOHkWtzbN",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Данные загружены в таблицу",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3600,
+        -112
+      ],
+      "id": "adcac0df-24c2-44fb-bc39-48557dcb0351",
+      "name": "Send a text message1",
+      "webhookId": "611ad7ff-0135-4462-ad32-101b345c3c51",
+      "credentials": {
+        "telegramApi": {
+          "id": "OXeyEoikgIxX6tce",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        2544,
+        -320
+      ],
+      "id": "de04d951-78e3-4398-863d-aa33ba58a2f5",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e788fc14-01b3-49cd-8d01-81412cd56bc3",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.document.mime_type }}",
+              "rightValue": "application/pdf",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2288,
+        -304
+      ],
+      "id": "13ef600b-5c96-4fb0-9e3c-44ddbd0ed171",
+      "name": "pdf/docx"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3fccf92b-45c3-4483-a344-a02c904679ca",
+              "leftValue": "={{ $json.result.file_path }}",
+              "rightValue": "txt",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        -112
+      ],
+      "id": "29b18af1-c7ff-4b92-a6bc-80dbe56d8feb",
+      "name": "txt/pdf,docx"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        2736,
+        -112
+      ],
+      "id": "3f20ce5c-c135-488e-86ae-a8a2026d308e",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "outputFormat": "txt"
+      },
+      "type": "@cloudconvert/n8n-nodes-cloudconvert.cloudConvert",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        -208
+      ],
+      "id": "222c069b-70fe-4f12-a187-843c4d065d70",
+      "name": "CloudConvert",
+      "credentials": {
+        "cloudConvertApi": {
+          "id": "Eox34AGX2NLyoOoA",
+          "name": "CloudConvert account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Authorization\": \"Bearer gsk_xxx\",\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama-3.1-8b-instant"
+            },
+            {
+              "name": "messages",
+              "value": "={{[   {     \"role\": \"system\",     \"content\": \"You are a JSON API. You must return ONLY valid JSON. Do not include explanations, markdown, headings, or any text outside JSON. If you break the format, the response is invalid.\"   },   {     \"role\": \"user\",     \"content\": `Here is a document text: ${$json.text}. Tasks: 1. Write a concise summary in russian language (3–7 sentences). 2. Extract 5–10 keywords. Return the result STRICTLY in JSON, without explanations and text around.\nResponse format: { \"summary\": \"...\", \"keywords\": [\"...\"] }`   } ]}}"
+            },
+            {
+              "name": "temperature",
+              "value": "={{0.7}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2864,
+        -336
+      ],
+      "id": "81d132c8-7eee-411c-8c1d-b079fa4e3667",
+      "name": "Grock http1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "txt/pdf,docx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grock http": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Grock http1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pdf/docx": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CloudConvert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "txt/pdf,docx": {
+      "main": [
+        [
+          {
+            "node": "pdf/docx",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Grock http",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CloudConvert": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grock http1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "135c5e5e-1be6-4fbe-a988-fb602b18320c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8ca97dc50b75529b79bd34e49777a1c84750ee85bfe37fb3dbcc6f1688273fa"
+  },
+  "id": "FxwEt7MApPIinLXu",
+  "tags": []
+}
