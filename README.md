@@ -36,17 +36,19 @@
 
 
 ## Примеры работы
+1)Пользователь отправляет pdf файл 
+<img width="2207" height="752" alt="image" src="https://github.com/user-attachments/assets/2d99c1e5-dd18-4122-b4ce-b3c3e1b00cd1" />
+2)Пользователь отправляетя txt файл
+<img width="2256" height="818" alt="image" src="https://github.com/user-attachments/assets/4ad8b9bc-5de2-4622-ae8f-f98538212e74" />
+3)Пользователь отрпавляет текст (приходит сообщение: "Пожалуйста, отправьте документ 📄  Поддерживаемые форматы: • PDF • DOCX • TXT • MD
+")
+<img width="2133" height="679" alt="image" src="https://github.com/user-attachments/assets/9c7193f2-f653-411b-a20d-ad2c682d205f" />
 
-1. Пользователь отправляет файл `example.pdf` в Telegram.
-2. Текст из документа извлекается и передается в Grok API.
-3. Полученный JSON с суммаризацией и ключевыми словами сохраняется в Google Sheets:
+Пользователь получает уведомление после каждой зугрзке страницы: `"Данные загружены в таблицу"`.
 
-| timestamp           | uploader  | file_name   | summary               | keywords            |
-| ------------------- | --------- | ----------- | --------------------- | ------------------- |
-| 2025-12-15 01:00:00 | sepl_user | example.pdf | Краткое содержание... | слово1, слово2, ... |
-
-4. Пользователь получает уведомление: `"Данные загружены в таблицу"`.
-
+Итоговый вид таблицы после трех успешных запросов:
+<img width="2426" height="195" alt="image" src="https://github.com/user-attachments/assets/0b0475dc-dd36-49bf-b9c7-feca417a5db8" />
+https://docs.google.com/spreadsheets/d/16ovhu6YxG7HNA5S4wDOuQ5yUwho5UUUteaNrjQgJR-I/edit?usp=sharing
 
 ## Возможные улучшения
 
@@ -56,5 +58,9 @@
 * Уведомления об успешной обработке и ошибки через Telegram.
 * Добавление тегов или категорий для документов.
 
+##Id чат бота для Проверки
+@DocInsightHelperBot
 
-Хочешь, чтобы я сделал такую версию?
+## Сообщение, которое отправлется в нейросеть
+{{[   {     "role": "system",     "content": "You are a JSON API. You must return ONLY valid JSON. Do not include explanations, markdown, headings, or any text outside JSON. If you break the format, the response is invalid."   },   {     "role": "user",     "content": `Here is a document text: ${$json.data}. Tasks: 1. Write a concise summary in russian language (3–7 sentences). 2. Extract 5–10 keywords. Return the result STRICTLY in JSON, without explanations and text around.
+Response format: { "summary": "...", "keywords": ["..."] }`   } ]}}
