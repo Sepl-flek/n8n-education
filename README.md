@@ -58,7 +58,7 @@ https://docs.google.com/spreadsheets/d/16ovhu6YxG7HNA5S4wDOuQ5yUwho5UUUteaNrjQgJ
 * Уведомления об успешной обработке и ошибки через Telegram.
 * Добавление тегов или категорий для документов.
 
-##Id чат бота для Проверки
+## Id чат бота для Проверки
 @DocInsightHelperBot
 
 ## Сообщение, которое отправлется в нейросеть
